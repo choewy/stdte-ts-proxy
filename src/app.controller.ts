@@ -8,6 +8,11 @@ import { AppService } from './app.service';
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
+  @Get('health')
+  healthCheck() {
+    return this.appService.getVersion();
+  }
+
   @Get('*')
   async getProxyTarget(@Req() req: Request, @Res() res: Response) {
     return this.appService.getProxyTarget(req, res);
