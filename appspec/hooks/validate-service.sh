@@ -9,7 +9,7 @@ while [ $loop -le 5 ]
 do
   ((loop++))
 
-  status="$(curl --silent --head -X GET http://localhost:${REPLACE} | awk '/^HTTP/{print $2}')"
+  status="$(curl --silent --head -X GET http://localhost:${REPLACE}/health | awk '/^HTTP/{print $2}')"
 
   if [ "$status" == "200" ]; then
     bootstrap=true
