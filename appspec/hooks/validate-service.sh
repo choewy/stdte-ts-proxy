@@ -9,7 +9,7 @@ while [ $loop -le 5 ]
 do
   ((loop++))
 
-  status="$(curl --silent --head -X GET http://localhost:${REPLACE}/health | awk '/^HTTP/{print $2}')"
+  status="$(curl --silent --head -X GET http://localhost:8000/health | awk '/^HTTP/{print $2}')"
 
   if [ "$status" == "200" ]; then
     bootstrap=true
@@ -21,28 +21,12 @@ done
 
 
 if [ $bootstrap == false ]; then
-  echo "fail bootstrap ${REPLACE}"
+  echo "fail bootstrap ${PREFIX}"
 
-  container="$PREFIX-$REPLACE"
-
-  if [ "$(sudo docker container inspect --format '{{.Name}}' $container 2>&1)" == "/$container" ]; then
-    container_id=`sudo docker rm -f $container`
-    echo "remove replace container $container_id"
-  fi
-  
   exit 1
 fi
 
-if [ $bootstrap == true ]; then
-  echo "success bootstrap ${REPLACE}"
-
-  container="$PREFIX-$ORIGIN"
-
-  if [ "$(sudo docker container inspect --format '{{.Name}}' $container 2>&1)" == "/$container" ]; then
-    container_id=`sudo docker stop $container`
-    echo "stop origin container $container_id"
-  fi
-fi
+echo "success bootstrap ${PREFIX}"
 
 if [ -d "/home/ubuntu/proxy" ]; then
   rm -rf /home/ubuntu/proxy

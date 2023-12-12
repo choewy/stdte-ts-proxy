@@ -13,17 +13,4 @@ prefix=stdte-ts-proxy
 echo "PREFIX=$prefix" >> $docker
 echo "IMAGE_ID=$image_id" >> $docker
 
-ports=(8000 8001)
-
-for (( i = 0; i < ${#ports[@]}; i++ )); do
-  port=${ports[$i]}
-  container="$prefix-$port"
-
-  if [ "$(sudo docker container inspect --format '{{.Name}}' $container 2>&1)" == "/$container" ]; then
-    echo "ORIGIN=$port" >> $docker
-  else
-    echo "REPLACE=$port" >> $docker
-  fi
-done
-
 exit 0
