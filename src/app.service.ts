@@ -49,10 +49,12 @@ export class AppService implements OnApplicationBootstrap {
 
       res.sendFile(this.saveFile(pathname, response.data, extension));
     } catch (e) {
+      console.log(e);
+
       let exception: HttpException;
 
       if (e instanceof AxiosError) {
-        exception = new HttpException(e.response?.data, e.response?.status ?? 400);
+        exception = new InternalServerErrorException(e.response?.data);
       } else {
         exception = new InternalServerErrorException({
           name: e?.name,
@@ -60,8 +62,6 @@ export class AppService implements OnApplicationBootstrap {
           cause: e?.cause,
         });
       }
-
-      console.warn({ status: exception.getStatus(), data: exception.getResponse() });
 
       res.status(exception.getStatus()).send(exception.getResponse());
     }
