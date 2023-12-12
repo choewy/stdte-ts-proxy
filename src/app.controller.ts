@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 
-import { Controller, Get, Req, Res } from '@nestjs/common';
+import { Controller, Get, Patch, Post, Put, Req, Res } from '@nestjs/common';
 
 import { AppService } from './app.service';
 
@@ -16,5 +16,20 @@ export class AppController {
   @Get('*')
   async getProxyTarget(@Req() req: Request, @Res() res: Response) {
     return this.appService.getProxyTarget(req, res);
+  }
+
+  @Post('*')
+  async postProxyTarget(@Req() req: Request, @Res() res: Response) {
+    return this.appService.requeestProxyTarget(req, res);
+  }
+
+  @Patch('*')
+  async patchProxyTarget(@Req() req: Request, @Res() res: Response) {
+    return this.appService.requeestProxyTarget(req, res);
+  }
+
+  @Put('*')
+  async putProxyTarget(@Req() req: Request, @Res() res: Response) {
+    return this.appService.requeestProxyTarget(req, res);
   }
 }

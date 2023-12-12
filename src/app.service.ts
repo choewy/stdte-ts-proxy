@@ -41,13 +41,48 @@ export class AppService implements OnApplicationBootstrap {
     const responseType = this.getResponseType(extension);
 
     try {
-      const response = await lastValueFrom(this.httpService.get<string>(target + pathname, { responseType }));
+      const response = await lastValueFrom(
+        this.httpService.get<string>(target + pathname, { responseType, params: req.query }),
+      );
 
       if (['', 'php', 'html', 'adm', 'english'].includes(extension)) {
         return res.send(response.data.replaceAll(target, host));
       }
 
       res.sendFile(this.saveFile(pathname, response.data, extension));
+    } catch (e) {
+      let exception: HttpException;
+
+      if (e instanceof AxiosError) {
+        exception = new AxiosException(e);
+      } else {
+        exception = new InternalServerException(e);
+      }
+
+      res.status(exception.getStatus()).send({
+        ok: false,
+        version: this.appConfig.getVersion(),
+        data: {
+          status: exception.getStatus(),
+          name: exception.name,
+          message: exception.message,
+          cause: exception.cause,
+        },
+      });
+    }
+  }
+
+  async requeestProxyTarget(req: Request, res: Response) {
+    const target = this.proxyConfig.getTarget();
+
+    try {
+      const response = await lastValueFrom(
+        this.httpService[req.method as 'post' | 'patch' | 'put']<string>(target + req.path, req.body, {
+          params: req.query,
+        }),
+      );
+
+      res.send(response.data);
     } catch (e) {
       let exception: HttpException;
 
