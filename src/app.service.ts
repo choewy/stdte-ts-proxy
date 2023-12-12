@@ -2,13 +2,13 @@ import { lastValueFrom } from 'rxjs';
 import { Request, Response } from 'express';
 import { existsSync, mkdirSync, writeFileSync } from 'fs';
 import { resolve } from 'path';
+import { AxiosError } from 'axios';
 
-import { HttpException, Injectable, InternalServerErrorException, OnApplicationBootstrap } from '@nestjs/common';
+import { HttpException, Injectable, OnApplicationBootstrap } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 
 import { AppConfig, ProxyConfig } from './config';
-import { ResponseType } from './common';
-import { AxiosError } from 'axios';
+import { AxiosException, InternalServerException, ResponseType } from './common';
 
 @Injectable()
 export class AppService implements OnApplicationBootstrap {
@@ -49,21 +49,24 @@ export class AppService implements OnApplicationBootstrap {
 
       res.sendFile(this.saveFile(pathname, response.data, extension));
     } catch (e) {
-      console.log(e);
-
       let exception: HttpException;
 
       if (e instanceof AxiosError) {
-        exception = new InternalServerErrorException(e.response?.data);
+        exception = new AxiosException(e);
       } else {
-        exception = new InternalServerErrorException({
-          name: e?.name,
-          message: e?.message,
-          cause: e?.cause,
-        });
+        exception = new InternalServerException(e);
       }
 
-      res.status(exception.getStatus()).send(exception.getResponse());
+      res.status(exception.getStatus()).send({
+        ok: false,
+        version: this.appConfig.getVersion(),
+        data: {
+          status: exception.getStatus(),
+          name: exception.name,
+          message: exception.message,
+          cause: exception.cause,
+        },
+      });
     }
   }
 
