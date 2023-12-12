@@ -46,7 +46,12 @@ export class AppService implements OnApplicationBootstrap {
       );
 
       if (['', 'php', 'html', 'adm', 'english'].includes(extension)) {
-        return res.send(response.data.replaceAll(target, host));
+        const split = target.split('://');
+        const protocol = split[0];
+        const origin = split[1];
+        const www = `${protocol}://www.${origin}`;
+
+        return res.send(response.data.replaceAll(target, host).replaceAll(www, host));
       }
 
       res.sendFile(this.saveFile(pathname, response.data, extension));
