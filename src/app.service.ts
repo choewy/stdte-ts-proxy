@@ -43,7 +43,7 @@ export class AppService implements OnApplicationBootstrap {
     try {
       const response = await lastValueFrom(this.httpService.get<string>(target + pathname, { responseType }));
 
-      if (['', 'php', 'html'].includes(extension)) {
+      if (['', 'php', 'html', 'adm'].includes(extension)) {
         return res.send(response.data.replaceAll(target, host));
       }
 
