@@ -12,7 +12,6 @@ import { ResponseType } from './common';
 @Injectable()
 export class AppService implements OnApplicationBootstrap {
   private readonly staticPath = resolve(__dirname, '..', 'public');
-
   private readonly proxyConfig = new ProxyConfig();
 
   constructor(private readonly httpService: HttpService) {}

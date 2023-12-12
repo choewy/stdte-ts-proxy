@@ -1,0 +1,36 @@
+version: 0.0
+
+os: linux
+
+files:
+  - source: /
+    destination: /home/ubuntu/proxy
+    runas: ubuntu
+    overwrite: yes
+
+permissions:
+  - object: /
+    pattern: '**'
+    owner: ubuntu
+    group: ubuntu
+
+hooks:
+  BeforeInstall:
+    - location: hooks/before-install.sh
+      timeout: 100
+      runas: ubuntu
+
+  AfterInstall:
+    - location: hooks/after-install.sh
+      timeout: 300
+      runas: ubuntu
+
+  ApplicationStart:
+    - location: hooks/start-application.sh
+      timeout: 300
+      runas: ubuntu
+
+  ValidateService:
+    - location: hooks/validate-service.sh
+      timeout: 100
+      runas: ubuntu

@@ -1,0 +1,124 @@
+name: Release
+
+on:
+  push:
+    branches: ['master']
+    tags: ['v*']
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+
+    strategy:
+      matrix:
+        node: [20]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: Install dependencies
+        run: |
+          npm ci
+
+      - name: Build application
+        run: |
+          npm run build
+
+      - name: Create environments
+        env:
+          ENV: ${{ secrets.ENV }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          rm .env
+          echo "$ENV" >> .env
+          echo "VERSION=$TAG" >> .env
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-region: ${{ secrets.AWS_REGION }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      - name: Login to ECR
+        id: ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Image Build and push to ECR
+        env:
+          TAG: ${{ github.ref_name }}
+          REGISTRY: ${{ steps.ecr.outputs.registry }}
+          REPOSITORY: ${{ secrets.AWS_ECR_REPOSITORY }}
+        run: |
+          IMAGE_PATH="$REGISTRY/$REPOSITORY:$TAG"
+          cd docker/proxy
+          bash scripts/build.sh $IMAGE_PATH
+          bash scripts/push.sh $IMAGE_PATH
+
+  deploy:
+    needs: build
+
+    runs-on: ubuntu-22.04
+
+    env:
+      BUCKET: ${{ secrets.AWS_S3_BUCKET }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-region: ${{ secrets.AWS_REGION }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      - name: Login to ECR
+        id: ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Create profile and zip files
+        env:
+          TAG: ${{ github.ref_name }}
+          REGISTRY: ${{ steps.ecr.outputs.registry }}
+          REPOSITORY: ${{ secrets.AWS_ECR_REPOSITORY }}
+        run: |
+          ZIP_NAME="product-$TAG-$GITHUB_SHA"
+          IMAGE_NAME="$REPOSITORY:$TAG"
+          IMAGE_PATH="$REGISTRY/$IMAGE_NAME"
+          touch profile
+          echo "ZIP_NAME=$ZIP_NAME" >> profile
+          echo "REGISTRY=$REGISTRY" >> profile
+          echo "IMAGE_NAME=$IMAGE_NAME" >> profile
+          echo "IMAGE_PATH=$IMAGE_PATH" >> profile
+
+      - name: Zip files
+        run: |
+          source profile
+          mv appspec/* .
+          zip -r $ZIP_NAME.zip appspec.yml profile hooks
+
+      - name: Upload to S3
+        run: |
+          source profile
+          unzip $ZIP_NAME.zip -d $ZIP_NAME
+          aws deploy push \
+            --application-name stdte-ts-proxy \
+            --s3-location s3://$BUCKET/$ZIP_NAME.zip \
+            --source $ZIP_NAME
+
+      - name: Create Deployment
+        run: |
+          source profile
+          aws deploy create-deployment \
+            --application-name stdte-ts-proxy \
+            --deployment-group-name product \
+            --deployment-config-name CodeDeployDefault.AllAtOnce \
+            --s3-location bucket=$BUCKET,bundleType=zip,key=$ZIP_NAME.zip
