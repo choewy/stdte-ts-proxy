@@ -21,12 +21,12 @@ done
 
 
 if [ $bootstrap == false ]; then
-  echo "fail bootstrap ${PREFIX}"
+  echo "fail bootstrap $PREFIX"
 
   exit 1
 fi
 
-echo "success bootstrap ${PREFIX}"
+echo "success bootstrap $PREFIX"
 
 if [ -d "/home/ubuntu/proxy" ]; then
   rm -rf /home/ubuntu/proxy
