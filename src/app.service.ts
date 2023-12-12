@@ -75,7 +75,7 @@ export class AppService implements OnApplicationBootstrap {
   }
 
   private getResponseType(extension: string): ResponseType | undefined {
-    if (['jpg', 'ttf', 'woff', 'woff2'].includes(extension)) {
+    if (['ico', 'gif', 'jpg', 'png', 'ttf', 'woff', 'woff2'].includes(extension)) {
       return 'arraybuffer';
     }
   }
@@ -86,7 +86,7 @@ export class AppService implements OnApplicationBootstrap {
 
     mkdirSync(dirpath, { recursive: true });
 
-    if (['jpg', 'ttf', 'woff', 'woff2'].includes(extension)) {
+    if (['ico', 'gif', 'jpg', 'png', 'ttf', 'woff', 'woff2'].includes(extension)) {
       writeFileSync(filepath, Buffer.from(data, 'binary'));
     } else {
       writeFileSync(filepath, data);
