@@ -93,7 +93,6 @@ jobs:
           ZIP_NAME="product-$TAG-$GITHUB_SHA"
           IMAGE_NAME="$REPOSITORY:$TAG"
           IMAGE_PATH="$REGISTRY/$IMAGE_NAME"
-          touch profile
           echo "ZIP_NAME=$ZIP_NAME" >> profile
           echo "REGISTRY=$REGISTRY" >> profile
           echo "IMAGE_NAME=$IMAGE_NAME" >> profile

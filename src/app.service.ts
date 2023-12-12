@@ -61,7 +61,9 @@ export class AppService implements OnApplicationBootstrap {
         });
       }
 
-      res.status(exception.getStatus()).send(exception);
+      console.warn({ status: exception.getStatus(), data: exception.getResponse() });
+
+      res.status(exception.getStatus()).send(exception.getResponse());
     }
   }
 
